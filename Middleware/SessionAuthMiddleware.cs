@@ -30,7 +30,7 @@ namespace Intro.Middleware
                 // 10 000 000 тиков в секунде
                 long authInterval = (DateTime.Now.Ticks - authMoment) / (long)1e7;
 
-                if (authInterval > 10)  // Предельная длительность сеанса авторизации
+                if (authInterval > 100)  // Предельная длительность сеанса авторизации
                 {
                     // Стираем из сессии признак авторизации
                     context.Session.Remove("userId");

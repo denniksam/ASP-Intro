@@ -11,9 +11,11 @@
 else{
     <img src='/img/@user.Avatar' style='max-height:15em;border-radius:50%'/>
     <br/>
-    <b id='userLogin'>@user.Login</b>
+    <i>Login:</i> <b id='userLogin'>@user.Login</b>
     <br/>
-    <span id='userRealName'>@user.RealName</span>
+    <i>Real name:</i> <span id='userRealName'>@user.RealName</span>
+    <br/>
+    <i>Email:</i> <span id='userEmail'>@user.Email</span>
 
 }
 <script>
@@ -35,13 +37,36 @@ else{
                 // e.target.parentNode.appendChild(txt);
             }
         };
+        userRealName.onkeydown = editableKeydown;
 
         const userLogin = document.getElementById("userLogin");
         if(!userLogin) throw "userLogin not found in DOM";
         userLogin.onclick = editableClick;
         userLogin.onblur = userLoginBlur;
-        userLogin.onkeydown = userLoginKeydown;
+        userLogin.onkeydown = editableKeydown;
+
+        const userEmail = document.getElementById("userEmail");
+        if(!userEmail) throw "userEmail not found in DOM";
+        userEmail.onclick = editableClick;
+        userEmail.onblur = userEmailBlur;
+        userEmail.onkeydown = editableKeydown;
     });
+
+    function userEmailBlur(e) {
+        e.target.removeAttribute("contenteditable");
+         if(e.target.savedValue != e.target.innerText) {
+             fetch("/Auth/ChangeEmail",                  
+                 {
+                     method: "PUT",
+                     headers: {
+                         "Content-Type": "application/x-www-form-urlencoded"  // [FromForm]
+                     },
+                     body: `NewEmail=${e.target.innerText}`
+                 }
+             ).then(r => r.json())
+              .then(console.log);
+         }
+    }
 
     function editableClick(e) {
         // переводим поле в режим редактирования
@@ -53,15 +78,30 @@ else{
     function userLoginBlur(e) {
          e.target.removeAttribute("contenteditable");
          if(e.target.savedValue != e.target.innerText) {
-             alert(e.target.savedValue);
+             // alert(e.target.savedValue);
+             fetch("/Auth/ChangeLogin",                  
+                 {
+                     method: "POST",
+                     headers: {
+                         // "Content-Type": "application/x-www-form-urlencoded"  // [FromForm]
+                         "Content-Type": "application/json"  // [FromBody]
+                     },
+                     body: JSON.stringify(e.target.innerText)                      
+                 }
+             ).then(r => r.json())
+              .then(console.log);
          }
     }
 
-    function userLoginKeydown(e) {
+    function editableKeydown(e) {
         // console.log(e)
         if(e.key == "Enter") {
             e.preventDefault();
-            userLoginBlur(e);
+            e.target.blur();
         }
     }
 </script>
+
+Домашнее задание: реализовать в кабинете пользователя возможность
+изменения пароля
+Установить ПО Postman

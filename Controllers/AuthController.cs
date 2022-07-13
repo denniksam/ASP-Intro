@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Intro.Controllers
 {
@@ -243,6 +244,46 @@ namespace Intro.Controllers
                 return "Forbidden";
             }
             return NewName + " changed";
+        }
+
+        [HttpPost]
+        public JsonResult ChangeLogin([FromBody]String NewLogin)
+        {
+            String message = "OK";
+            if(_authService.User == null)
+            {
+                message = "Unathorized";
+            }
+            else if (String.IsNullOrEmpty(NewLogin))
+            {
+                message = "Login could not be empty";
+            }
+            else if (Regex.IsMatch(NewLogin, @"\s"))
+            {
+                message = "Login could not contain space(s)";
+            }
+            else if(_introContext.Users.Where(u => u.Login == NewLogin).Count() > 0)
+            {
+                message = "Login in use";
+            }
+
+            if(message == "OK")  // не было ошибок
+            {
+                // обновляем данные в БД
+                _authService.User.Login = NewLogin;  
+                // authService.User - ссылка на пользователя в БД,
+                // поэтому изменения через authService.User сразу отражаются на БД
+                _introContext.SaveChanges();  // остается только сохранить изменения
+            }
+            return Json(message);
+        }
+
+        [HttpPut]
+        public JsonResult ChangeEmail([FromForm] String NewEmail)
+        {
+            String message = "OK " + NewEmail;
+
+            return Json(message);
         }
     }
 }
