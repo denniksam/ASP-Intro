@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Intro.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
@@ -12,47 +13,24 @@ namespace Intro.Controllers
     {
         private readonly Services.IHasher _hasher;
         private readonly DAL.Context.IntroContext _introContext;
+        private readonly IAuthService _authService;
 
-        private DAL.Entities.User authUser;  // ссылка на авторизованного пользователя
+        // private DAL.Entities.User authUser;  // ссылка на авторизованного пользователя
 
         public AuthController(
             Services.IHasher hasher,
-            DAL.Context.IntroContext introContext)
+            DAL.Context.IntroContext introContext, 
+            IAuthService authService)
         {
             _hasher = hasher;
             _introContext = introContext;
-            authUser = null;
+            _authService = authService;
         }
 
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            String userId = HttpContext.Session.GetString("userId");
-            if (userId != null)
-            {   // Была авторизация и в сессии хранится id пользователя
-
-                // Извлекаем метку времени начала авторизации и вычисляем длительность
-                long authMoment = Convert.ToInt64(
-                    HttpContext.Session.GetString("AuthMoment"));
-
-                // 10 000 000 тиков в секунде
-                long authInterval = (DateTime.Now.Ticks - authMoment) / (long)1e7;
-
-                if (authInterval > 1100)  // Предельная длительность сеанса авторизации
-                {
-                    // Стираем из сессии признак авторизации
-                    HttpContext.Session.Remove("userId");
-                    HttpContext.Session.Remove("AuthMoment");
-                    // По правилам безопасности: если меняется состояние авторизации
-                    //  то необходимо перезагрузить систему (страницу)
-                    HttpContext.Response.Redirect("/");
-                    return;
-                }
-                // сохраняем в контроллере ссылку на авторизованного пользователя
-                authUser = _introContext.Users.Find(Guid.Parse(userId));
-                ViewData["AuthUser"] = authUser;
-            }
-            base.OnActionExecuting(context);
+            ViewData["AuthUser"] = _authService.User;
         }
 
         public IActionResult Index()
@@ -241,15 +219,26 @@ namespace Intro.Controllers
         }
 
 
-        public ViewResult Profile()
+        public IActionResult Profile()
         {
+            // Задание: если пользователь не авторизован, то перенаправить на страницу логина
+            if(_authService.User == null)
+            {
+                // Внутренний (внутрисервервный) редирект. В браузере остается адрес 
+                //  /Auth/Profile, а реально отображается /Auth/Index
+                // return View("Index");
+
+                // Внешний редирект - браузер повторяет запрос на новый адрес
+                //  запрос /Auth/Profile -- редирект на /Auth/Index и он отображается
+                return Redirect("/Auth/Index");
+            }
 
             return View();
         }
 
         public String ChangeRealName(String NewName)
         {
-            if(authUser == null)
+            if(_authService.User == null)
             {
                 return "Forbidden";
             }

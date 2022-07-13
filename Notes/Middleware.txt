@@ -39,15 +39,14 @@
 авторизации)
 
 
-
-
-
-
             err
              | 
 request1  \  M   / endpoint1	   request1  -------- endpoint1
 request2  - ---- - endpoint2	   request2  -------- endpoint2
 request3  /  W   \ endpoint3	   request3  -------- endpoint3
 
-
-
+                     HomeController(IAuthService)
+                   / 
+request --[    ]-  - AuthController(IAuthService)
+                   \
+                

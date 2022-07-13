@@ -36,31 +36,8 @@ namespace Intro.Controllers
         }
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            String userId = HttpContext.Session.GetString("userId");
-            if (userId != null)
-            {   // Была авторизация и в сессии хранится id пользователя
-
-                // Извлекаем метку времени начала авторизации и вычисляем длительность
-                long authMoment = Convert.ToInt64(
-                    HttpContext.Session.GetString("AuthMoment"));
-
-                // 10 000 000 тиков в секунде
-                long authInterval = (DateTime.Now.Ticks - authMoment) / (long)1e7;
-
-                if(authInterval > 10)  // Предельная длительность сеанса авторизации
-                {
-                    // Стираем из сессии признак авторизации
-                    HttpContext.Session.Remove("userId");
-                    HttpContext.Session.Remove("AuthMoment");
-                    // По правилам безопасности: если меняется состояние авторизации
-                    //  то необходимо перезагрузить систему (страницу)
-                    HttpContext.Response.Redirect("/");
-                    return;
-                }
-
-                ViewData["AuthUser"] = _introContext.Users.Find(Guid.Parse(userId));
-            }
-            base.OnActionExecuting(context);
+            ViewData["AuthUser"] = _authService.User;
+            // base.OnActionExecuting(context);
         }
 
         public IActionResult Index()

@@ -10,7 +10,8 @@
 }
 else{
     <img src='/img/@user.Avatar' style='max-height:15em;border-radius:50%'/>
-    <b>@user.Login</b>
+    <br/>
+    <b id='userLogin'>@user.Login</b>
     <br/>
     <span id='userRealName'>@user.RealName</span>
 
@@ -18,12 +19,7 @@ else{
 <script>
     document.addEventListener('DOMContentLoaded',()=>{
         const userRealName = document.getElementById("userRealName");
-        userRealName.onclick = e => {  // клик по полю userRealName
-            // переводим поле в режим редактирования
-            e.target.setAttribute("contenteditable", true);
-            // запоминаем, что в нем было (чтобы потом проверить изменения были ли)
-            e.target.savedValue = e.target.innerText;
-        };
+        userRealName.onclick = editableClick;
         userRealName.onblur = e => {  // потеря фокуса - выход из элемента
             e.target.removeAttribute("contenteditable");
             // проверяем были ли изменения от сохраненного значения
@@ -39,5 +35,33 @@ else{
                 // e.target.parentNode.appendChild(txt);
             }
         };
+
+        const userLogin = document.getElementById("userLogin");
+        if(!userLogin) throw "userLogin not found in DOM";
+        userLogin.onclick = editableClick;
+        userLogin.onblur = userLoginBlur;
+        userLogin.onkeydown = userLoginKeydown;
     });
+
+    function editableClick(e) {
+        // переводим поле в режим редактирования
+        e.target.setAttribute("contenteditable", true);
+        // запоминаем, что в нем было (чтобы потом проверить изменения были ли)
+        e.target.savedValue = e.target.innerText;
+    }
+
+    function userLoginBlur(e) {
+         e.target.removeAttribute("contenteditable");
+         if(e.target.savedValue != e.target.innerText) {
+             alert(e.target.savedValue);
+         }
+    }
+
+    function userLoginKeydown(e) {
+        // console.log(e)
+        if(e.key == "Enter") {
+            e.preventDefault();
+            userLoginBlur(e);
+        }
+    }
 </script>
