@@ -1,0 +1,43 @@
+﻿@{
+    var user = ViewData["AuthUser"] as Intro.DAL.Entities.User;
+}
+
+<h1>Кабинет пользователя</h1>
+
+@if(user == null)
+{
+    <a href="/Auth">Необходимо авторизоваться</a>
+}
+else{
+    <img src='/img/@user.Avatar' style='max-height:15em;border-radius:50%'/>
+    <b>@user.Login</b>
+    <br/>
+    <span id='userRealName'>@user.RealName</span>
+
+}
+<script>
+    document.addEventListener('DOMContentLoaded',()=>{
+        const userRealName = document.getElementById("userRealName");
+        userRealName.onclick = e => {  // клик по полю userRealName
+            // переводим поле в режим редактирования
+            e.target.setAttribute("contenteditable", true);
+            // запоминаем, что в нем было (чтобы потом проверить изменения были ли)
+            e.target.savedValue = e.target.innerText;
+        };
+        userRealName.onblur = e => {  // потеря фокуса - выход из элемента
+            e.target.removeAttribute("contenteditable");
+            // проверяем были ли изменения от сохраненного значения
+            if(e.target.savedValue != e.target.innerText) {
+                // если были - передаем изменения на сервер
+                // alert(e.target.innerText);
+                fetch("/Auth/ChangeRealName?NewName=" + e.target.innerText)
+                .then(r => r.text())
+                .then(t => alert(t));
+
+                // var txt = document.createElement("p");
+                // txt.innerText = e.target.innerText;
+                // e.target.parentNode.appendChild(txt);
+            }
+        };
+    });
+</script>

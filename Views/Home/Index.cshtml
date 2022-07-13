@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<p id="rndNumber">
+    @Html.Raw( ViewData["rnd"] )
+</p>
+<i>
+    @ViewBag.hash
+</i>
+
+<p>
+    Users Count: @ViewData["UsersCount"]
+</p>
+
+<p>
+    fromAuthMiddleware @ViewData["fromAuthMiddleware"];
+</p>
+<p>
+    authUserName @ViewData["authUserName"]
+</p>
+<script>
+setInterval(
+    ()=>{ 
+        fetch("/Home/Random")
+        .then(r => r.text())
+        .then(t => rndNumber.innerText = t)
+    },
+    1000
+)
+</script>
