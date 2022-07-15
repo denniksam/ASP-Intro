@@ -9,7 +9,9 @@
     <a href="/Auth">Необходимо авторизоваться</a>
 }
 else{
-    <img src='/img/@user.Avatar' style='max-height:15em;border-radius:50%'/>
+    <label for="avatar">
+        <img src='/img/@user.Avatar' style='max-height:15em;border-radius:50%'/>
+    </label>
     <br/>
     <i>Login:</i> <b id='userLogin'>@user.Login</b>
     <br/>
@@ -17,91 +19,18 @@ else{
     <br/>
     <i>Email:</i> <span id='userEmail'>@user.Email</span>
 
+    <input type="file" id="avatar" style="visibility:hidden" accept="image/*" />
 }
-<script>
-    document.addEventListener('DOMContentLoaded',()=>{
-        const userRealName = document.getElementById("userRealName");
-        userRealName.onclick = editableClick;
-        userRealName.onblur = e => {  // потеря фокуса - выход из элемента
-            e.target.removeAttribute("contenteditable");
-            // проверяем были ли изменения от сохраненного значения
-            if(e.target.savedValue != e.target.innerText) {
-                // если были - передаем изменения на сервер
-                // alert(e.target.innerText);
-                fetch("/Auth/ChangeRealName?NewName=" + e.target.innerText)
-                .then(r => r.text())
-                .then(t => alert(t));
+<script src="/js/profile.js"></script>
 
-                // var txt = document.createElement("p");
-                // txt.innerText = e.target.innerText;
-                // e.target.parentNode.appendChild(txt);
-            }
-        };
-        userRealName.onkeydown = editableKeydown;
+Передача файлов асинхронным способом
+1. Устанавливается файловый input, но его стараются скрыть. Для обеспечения активности
+для него ставят label
+2. Для файлового элемента устанавливают обработчик события change (или отдельная
+кнопка для изменения)
 
-        const userLogin = document.getElementById("userLogin");
-        if(!userLogin) throw "userLogin not found in DOM";
-        userLogin.onclick = editableClick;
-        userLogin.onblur = userLoginBlur;
-        userLogin.onkeydown = editableKeydown;
-
-        const userEmail = document.getElementById("userEmail");
-        if(!userEmail) throw "userEmail not found in DOM";
-        userEmail.onclick = editableClick;
-        userEmail.onblur = userEmailBlur;
-        userEmail.onkeydown = editableKeydown;
-    });
-
-    function userEmailBlur(e) {
-        e.target.removeAttribute("contenteditable");
-         if(e.target.savedValue != e.target.innerText) {
-             fetch("/Auth/ChangeEmail",                  
-                 {
-                     method: "PUT",
-                     headers: {
-                         "Content-Type": "application/x-www-form-urlencoded"  // [FromForm]
-                     },
-                     body: `NewEmail=${e.target.innerText}`
-                 }
-             ).then(r => r.json())
-              .then(console.log);
-         }
-    }
-
-    function editableClick(e) {
-        // переводим поле в режим редактирования
-        e.target.setAttribute("contenteditable", true);
-        // запоминаем, что в нем было (чтобы потом проверить изменения были ли)
-        e.target.savedValue = e.target.innerText;
-    }
-
-    function userLoginBlur(e) {
-         e.target.removeAttribute("contenteditable");
-         if(e.target.savedValue != e.target.innerText) {
-             // alert(e.target.savedValue);
-             fetch("/Auth/ChangeLogin",                  
-                 {
-                     method: "POST",
-                     headers: {
-                         // "Content-Type": "application/x-www-form-urlencoded"  // [FromForm]
-                         "Content-Type": "application/json"  // [FromBody]
-                     },
-                     body: JSON.stringify(e.target.innerText)                      
-                 }
-             ).then(r => r.json())
-              .then(console.log);
-         }
-    }
-
-    function editableKeydown(e) {
-        // console.log(e)
-        if(e.key == "Enter") {
-            e.preventDefault();
-            e.target.blur();
-        }
-    }
-</script>
 
 Домашнее задание: реализовать в кабинете пользователя возможность
 изменения пароля
 Установить ПО Postman
+

@@ -285,6 +285,35 @@ namespace Intro.Controllers
 
             return Json(message);
         }
+
+        [HttpPost]
+        public JsonResult ChangeAvatar(IFormFile userAvatar)
+        {
+            if (_authService.User == null)
+            {
+                return Json(new { Status = "Error", Message = "Forbidden" });
+            }
+            if (userAvatar == null)
+            {
+                return Json(new { Status = "Error", Message = "No file" });
+            }
+            // формируем имя для файла и сохраняем
+            int pos = userAvatar.FileName.LastIndexOf('.');
+            string IMG_Format = userAvatar.FileName.Substring(pos);
+            string ImageName = 
+                _hasher.Hash( Guid.NewGuid().ToString() )
+                 + IMG_Format;
+
+            userAvatar.CopyToAsync(
+                new FileStream("./wwwroot/img/" + ImageName, 
+                FileMode.Create));
+
+            // удаляем старый файл и заменяем у пользователя ссылку на новый файл
+            System.IO.File.Delete("./wwwroot/img/" + _authService.User.Avatar);
+            _authService.User.Avatar = ImageName;
+
+            return Json(new { Status = "Ok", Message = ImageName });
+        }
     }
 }
 /* В методе ChangeRealName реализовать случайным образом ответы
