@@ -247,7 +247,7 @@ namespace Intro.Controllers
         }
 
         [HttpPost]
-        public JsonResult ChangeLogin([FromBody]String NewLogin)
+        public JsonResult ChangeLogin([FromBody] String NewLogin)
         {
             String message = "OK";
             if(_authService.User == null)
@@ -304,13 +304,13 @@ namespace Intro.Controllers
                 _hasher.Hash( Guid.NewGuid().ToString() )
                  + IMG_Format;
 
-            userAvatar.CopyToAsync(
-                new FileStream("./wwwroot/img/" + ImageName, 
-                FileMode.Create));
+            var file = new FileStream("./wwwroot/img/" + ImageName, FileMode.Create);
+            userAvatar.CopyToAsync(file).ContinueWith(t => file.Dispose());
 
             // удаляем старый файл и заменяем у пользователя ссылку на новый файл
             System.IO.File.Delete("./wwwroot/img/" + _authService.User.Avatar);
             _authService.User.Avatar = ImageName;
+            _introContext.SaveChanges();  // сохраняем изменения в БД
 
             return Json(new { Status = "Ok", Message = ImageName });
         }

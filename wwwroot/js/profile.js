@@ -40,7 +40,17 @@ function avatarChange(e) {
             method: "POST",
             body: formData
         }).then(r => r.json())
-          .then(j => console.log(j));
+            .then(j => {
+                if (j.status == "Ok") {
+                    // нам приходит новое имя файла, заменяем на него источник <img id="userLogo">
+                    userLogo.src = `/img/${j.message}`;
+
+                    // TODO: обновить также аватар в заголовочной строке
+                }
+                else {
+                    alert(j.message);
+                }
+            });
     }
 }
 
