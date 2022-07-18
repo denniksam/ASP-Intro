@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Intro.DAL.Entities
 {
-    public class User
+    public record User
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
