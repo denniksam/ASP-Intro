@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Intro.API
 {
@@ -90,7 +92,79 @@ namespace Intro.API
         [HttpPut("{id}")]
         public object Put(String id, [FromForm] Models.RegUserModel userData)
         {
-            return new { id, userData };
+            DAL.Entities.User user;
+            Guid userid;
+            String avatarFilename = null;
+
+            #region Validation            
+            try  // is id valid?
+            {
+                userid = Guid.Parse(id);
+            }
+            catch
+            {
+                HttpContext.Response.StatusCode = 409;
+                return "Conflict: invalid id format (GUID required)";
+            }
+            // does user exist (with given id) ?
+            user = _context.Users.Find(userid);
+            if (user == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return "User with given id not found";
+            }
+            if(userData.Login != null)
+            {
+                if (Regex.IsMatch(userData.Login, @"\s"))
+                {
+                    HttpContext.Response.StatusCode = 409;
+                    return "Conflict: Login could not contain space(s)";
+                }
+                else if (_context.Users.Where(u => u.Login == userData.Login).Count() > 0)
+                {
+                    HttpContext.Response.StatusCode = 409;
+                    return "Conflict: Login in use";
+                }
+            }
+            if(userData.RealName != null)
+            {
+                // Имя: нет цифр, не пустое
+                if(userData.RealName == String.Empty)
+                {
+                    HttpContext.Response.StatusCode = 409;
+                    return "Conflict: RealName could not be empty";
+                }
+                if (Regex.IsMatch(userData.Login, @"\d"))
+                {
+                    HttpContext.Response.StatusCode = 409;
+                    return "Conflict: RealName could not contain digit(s)";
+                }
+            }
+
+            // Avatar
+            if (userData.Avatar != null)
+            {
+                // формируем имя для файла и сохраняем
+                int pos = userData.Avatar.FileName.LastIndexOf('.');
+                string IMG_Format = userData.Avatar.FileName.Substring(pos);
+                avatarFilename =
+                    _hasher.Hash(Guid.NewGuid().ToString())
+                     + IMG_Format;
+                var file = new FileStream("./wwwroot/img/" + avatarFilename, FileMode.Create);
+                userData.Avatar.CopyToAsync(file).ContinueWith(t => file.Dispose());
+                // удаляем старый файл
+                System.IO.File.Delete("./wwwroot/img/" + user.Avatar);
+            }
+
+            #endregion
+
+            // updates
+            if (userData.Login != null)  user.Login = userData.Login;
+            if (userData.RealName != null) user.RealName = userData.RealName;
+            if(avatarFilename != null) user.Avatar = avatarFilename;
+            _context.SaveChanges();
+
+            return user with { PassHash = "*", PassSalt = "*" };
         }
 
         // DELETE api/<UserController>/5
@@ -101,9 +175,6 @@ namespace Intro.API
     }
 }
 /* Д.З. Реализовать в методе PUT :
-   - проверку id на GUID (если не соответствует, возвращать 409)
-   - проверку на то, что существует пользователь с таким id (если нет, 404)
-   - поэтапно проверить какие из полей переданы в качестве изменений и 
-      подставить их в найденного пользователя, вернуть объект этого пользователя
-      в JSON виде (в БД можно не сохранять)
+    возможность изменения пароля
+    возможность изменения E-mail
  */

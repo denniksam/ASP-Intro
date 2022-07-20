@@ -19,3 +19,14 @@ POST - Create	| иногда
 PUT - Update	| наоборот
 DELETE - Delete
 
+
+
+Client								  Server (API / REST / CRUD)
+(NOT browser)		GET /api/user		Controller(/api/user)
+HTTP request ----------------------------->   Get() {...}
+					POST /api/news			  Post() {...}	  Controller(/api/news)
+			 ---------------------------|				 	   Get() {...}
+										|------------------->  Post() {...}
+
+
+
